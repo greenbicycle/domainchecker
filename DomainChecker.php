@@ -11,30 +11,30 @@
 class DomainChecker
 {
 
-    protected $_domain;
+    protected $domain;
     /**
      *  All dns records, unsorted
      */
-    protected $_dns_all = array();
+    protected $dns_all = array();
 
     /**
      * All dns records arranged in a multidimensional 
      * array by type.
      */
-    protected $_dns_sorted = array();
+    protected $dns_sorted = array();
 
     public function __construct($domain)
     {
-        $this->_domain = $domain;
-        $this->dns_all();
-        $this->dns_sort();
+        $this->domain = $domain;
+        $this->getAll();
+        $this->sort();
         // This will be false if no records were found.
-        return $this->_dns_all;
+        return $this->dns_all;
     }
 
     public function domain()
     {
-        return $this->_domain;
+        return $this->domain;
     }
 
     /**
@@ -48,9 +48,9 @@ class DomainChecker
      * @return array of arrays.
      *
      */
-    public function dns_get($type)
+    public function get($type)
     {
-        return dns_get_record($this->_domain, $type);
+        return dns_get_record($this->domain, $type);
     }
 
     /**
@@ -60,46 +60,58 @@ class DomainChecker
      * the records in dns_all instead of using multiple
      * calls to dns_get_record.
      */
-    public function dns_all()
+    public function getAll()
     {
         // Check to see if this has already been done.
-        if ( is_array($this->_dns_all) && count($this->_dns_all) == 0 ){
-            $this->_dns_all = $this->dns_get(DNS_ALL);
+        if (is_array($this->dns_all) && count($this->dns_all) == 0) {
+            $this->dns_all = $this->get(DNS_ALL);
         }
-        if ( count($this->_dns_all) == 0) {
-            $this->_dns_all = false;
+        if (count($this->dns_all) == 0) {
+            $this->dns_all = false;
         }
-        return $this->_dns_all;
+        return $this->dns_all;
     }
 
     /**
      * separate the records out by type
      */
-    public function dns_sort() {
-        if ( is_array($this->_dns_all)) {
-            foreach( $this->_dns_all as $dns_record){
+    public function sort()
+    {
+        if (is_array($this->dns_all)) {
+            foreach ($this->dns_all as $dns_record) {
                 // just to clean up the code a little
                 $current_type = $dns_record['type'];
-                if (!isset($this->_dns_sorted[$current_type])){
-                    $this->_dns_sorted[$current_type] = array();
+                if (!isset($this->dns_sorted[$current_type])) {
+                    $this->dns_sorted[$current_type] = array();
                 }
-                $this->_dns_sorted[$current_type][] = $dns_record;
+                $this->dns_sorted[$current_type][] = $dns_record;
             }
         } else {
             return false;
         }
     }
 
-    public function dns_all_raw(){
-        return $this->_dns_all;
+    /**
+     * return all dns records unsorted
+     */
+    public function raw()
+    {
+        return $this->dns_all;
     }
 
-    public function dns_sorted_raw(){
-        return $this->_dns_sorted;
+    public function sorted()
+    {
+        return $this->dns_sorted;
     }
 
-    public function nameservers() {
-        return $this->_dns_sorted['NS'];
+    /**
+     * Return just the nameserver(NS) records
+     *    
+     * @return array of name server records.    
+     */
+    public function nameservers()
+    {
+        return $this->dns_sorted['NS'];
     }
 
     /**
@@ -110,9 +122,9 @@ class DomainChecker
      */
     public function check()
     {
-        if ($this->_dns_all === false) {
+        if ($this->dns_all === false) {
             return false;
-        } elseif(!isset($this->_dns_sorted['ns'])) {
+        } elseif (!isset($this->dns_sorted['ns'])) {
             // We should probably have a nameserver set
             return false;
         } else {
@@ -121,4 +133,3 @@ class DomainChecker
 
     }
 }
-
