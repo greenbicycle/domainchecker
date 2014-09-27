@@ -1,0 +1,49 @@
+#!/usr/bin/php
+<?php
+/**
+ * Do some stuff with a domain name that is passed at the command line
+ *
+ * Usage php index.php <domain-name>
+ *
+ * Quick method for retrieving dns records via php
+ *
+ */
+require_once('DomainChecker.php');
+
+use Greenbicycle\DomainChecker;
+
+if ( isset($argv[1]) and is_string($argv[1])) {
+    $domain = new DomainChecker(strtolower($argv[1]));
+    print "\nDomain: " . $domain->domain();
+
+    foreach ($domain->dns_all() as $record) {
+        switch($record['type']){
+            case 'A': 
+                print "\n\t" . $record['type'] . ": " . $record['ip'];
+                break;
+            case 'AAAA': 
+                print "\n\t" . $record['type'] . ": " . $record['ipv6'];
+                break;
+            case 'NS': 
+                print "\n\t" . $record['type'] . ": " . $record['target'];
+                break;
+            case 'TXT': 
+                print "\n\t" . $record['type'] . ": " . trim($record['txt']);
+                break;
+            case 'MX': 
+                print "\n\t" . $record['type'] . ": " . $record['target'];
+                break;
+            case 'SOA':
+                // Don't show these at the moment.
+                break;
+            default:
+                // This will print out the entire record.
+                // print_r($record);
+        }
+    }
+    print "\n";
+} else {
+    print "\nPlease provide a valid domain name.";
+}
+
+print "\n";
